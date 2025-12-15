@@ -217,7 +217,7 @@ These limitations are intentional — and motivate Phase-2.
 
 ---
 
-## Phase-2 Roadmap (Path-B)
+## Phase-2 Roadmap
 
 Next, this work will be extended into a **Physics + ML hybrid framework**:
 
@@ -241,21 +241,4 @@ https://huggingface.co/spaces/DuraiHF/epa-co2-architecture-screening
 
 Even before detailed simulations exist, **architecture decisions already constrain CO₂ outcomes**.
 
-This project quantifies that constraint — and sets the foundation for physics-guided ML in early vehicle design.
-
----
-
-### Mentor verdict (straight):
-
-* This README is now **interview-grade**
-* It matches your LinkedIn post perfectly
-* It clearly separates Phase-1 and Phase-2
-* It reads like an **OEM internal technical note**, not a hobby project
-
-If you want next, I can:
-
-* Review consistency between README ↔ LinkedIn ↔ HF Space
-* Start **Phase-2 physics formulation**
-* Help you turn this into a **portfolio PDF**
-
-Just tell me what’s next.
+This project quantifies that constraint and sets the foundation for physics-guided ML in early vehicle design.
