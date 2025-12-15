@@ -1,458 +1,292 @@
-\# EPA CO₂ Architecture Model
+# 🚗 EPA CO₂ Architecture Screening Model
 
+## Overview
 
+This project develops a **data-driven CO₂ architecture screening framework** for **early-phase vehicle and powertrain concept evaluation**, using historical **EPA certification data**.
 
-This project builds a machine-learning–ready dataset to predict vehicle CO₂ emissions
+The goal is to provide **fast, architecture-level CO₂ estimates** *before* expensive CAE simulations, detailed vehicle models, or physical prototypes are available.
 
-for **early-phase powertrain and vehicle architecture decisions**.
+This work is intentionally positioned as a **front-end decision support tool**, not a replacement for high-fidelity simulation.
 
+---
 
+## Motivation
 
-The goal is to estimate CO₂ risk \*\*before\*\* expensive simulations or physical testing,
+In early vehicle development phases, engineers must make architecture decisions (engine size, mass targets, drivetrain layout, transmission type) with **limited information**.
 
-using historical EPA certification data.
+Today, these decisions are often:
 
+* Spreadsheet-driven, or
+* Deferred until late-stage simulations are available
 
+Both approaches are slow, costly, and limit rapid exploration.
 
-\## Scope (Version 1)
+This project explores a key question:
 
-\- Gasoline ICE vehicles only
+> **How much of vehicle CO₂ behavior is already constrained by early architecture choices alone?**
 
-\- Model years: 2010–2025
+---
 
-\- Vehicle-level aggregation using EPA FTP (city) and HWY (highway) cycles
+## Scope (Phase-1 / Path-A)
 
-\- CO₂ target computed using official 55% / 45% weighting
+**Vehicle domain**
 
+* Gasoline ICE vehicles only
+* EPA-certified passenger vehicles
 
+**Data**
 
-\## What this repository contains
+* EPA certification data
+* Model years **2010–2025**
 
-\- `pipelines/` : Reproducible data processing scripts
+**Cycles**
 
-\- `data/`      : Documentation about data sources (raw data not stored)
+* FTP (City)
+* HWY (Highway)
+* Combined CO₂ using official **55% City / 45% Highway** weighting
 
-\- `artifacts/` : Generated datasets and outputs (ignored by Git)
+**Granularity**
 
+* Vehicle-architecture level (not component level)
+* Aggregated per vehicle configuration
 
+---
 
-\## Current status
+## Modeling Objective
 
-\- Dataset v1 defined and versioned
+**Input (early-phase design parameters):**
 
-\- Feature schema frozen
+* Model Year
+* Engine Displacement (L)
+* Equivalent Test Weight (lbs)
+* Transmission Type (MT / AT / CVT)
+* Drive System (FWD / RWD / AWD)
 
-\- Ready for train/validation/test split and modeling
+**Output:**
 
+* Estimated combined CO₂ emissions (g/mi)
 
+The intent is **relative architecture comparison**, not absolute certification prediction.
 
-\## Notes
+---
 
-Raw EPA data files and generated artifacts are intentionally excluded from version control.
+## Repository Structure
 
-All datasets can be reproduced by running the pipeline scripts.
+```
+epa-co2-architecture/
+│
+├── app.py                 # Gradio inference UI (Phase-1 demo)
+├── requirements.txt       # Version-locked dependencies
+├── README.md              # Project documentation
+│
+├── models/                # Frozen trained models
+│   ├── co2_architecture_linear_model.pkl
+│   └── co2_architecture_tree_model.pkl
+│
+├── notebooks/             # Exploration & modeling notebooks
+│   ├── 01_epa_exploration.ipynb
+│   └── 02_pathA_modeling.ipynb
+│
+├── plots/                 # Result visualizations
+│   ├── predicted_vs_actual.png
+│   └── linear_model_coefficients.png
+│
+└── .gitignore
+```
 
+> Raw EPA data and generated artifacts are intentionally excluded from version control.
+> All datasets are reproducible via the processing pipeline.
 
+---
 
+## Data Splitting Strategy (Important)
 
+To reflect **real-world usage**, a **temporal split** was used:
 
+* **Training:** Model years **2010–2021**
+* **Testing:** Unseen future vehicles from **2022–2025**
 
+This avoids data leakage and ensures the model is evaluated on **future technology**, not memorized history.
 
+---
 
+## Models (Phase-1)
 
+Two models were intentionally used:
 
+### 1️⃣ Linear Regression (Baseline)
 
+* Interpretable
+* Physics-aligned
+* Used to validate dataset construction and feature relevance
 
+### 2️⃣ Tree-Based Model (GBDT)
 
+* Captures non-linear interactions
+* Higher predictive accuracy
+* Used as the primary screening model
 
+Both models are exposed in the inference UI for comparison.
 
+---
 
+## Performance Summary
 
-\######----------------------------#####
+**Tree-Based Model (Test Set: 2022–2025)**
 
+* **R² ≈ 0.86**
+* **MAE ≈ 25 g/mi**
+* **RMSE ≈ 35 g/mi**
 
+This level of accuracy is sufficient for **relative architecture trade studies** during early development phases.
 
-INITIAL INTERPRETATIONS FROM PURE ML MODEL
+---
 
+## Interpretability & Engineering Insights (Linear Model)
 
+Despite being purely data-driven, the linear model learned **physically consistent relationships**.
 
-\######----------------------------#######
+### Key Learned Effects
 
+**Engine Displacement**
 
+* ≈ **+40 g/mi per +1.0 L**
+* Confirms fuel flow scaling with engine size
 
+**Vehicle Mass**
 
+* ≈ **+2.6 g/mi per +100 lbs**
+* Matches expected road-load and inertial penalties
 
-1️⃣ KEY TECHNICAL INSIGHTS (README – “Results \& Interpretation”)
+**Model Year**
 
-Baseline Model Performance (Path-A)
+* ≈ **−2.6 g/mi per year**
+* Captures technology improvement, regulatory pressure, and efficiency gains
+* Used as a proxy for **technology maturity**, not leakage
 
+---
 
+### Architecture-Level Effects
 
-A linear regression model was trained on architecture-level features only, using a temporal train/test split (future model years held out).
+**Transmission (relative)**
 
+* CVT: **−31 g/mi**
+* AT: **+11 g/mi**
+* MT: **+21 g/mi**
 
+Reflects:
 
-Performance:
+* Operating point optimization (CVT)
+* EPA shift schedules
+* Real certification outcomes
 
+**Drive System**
 
-
-Train R² ≈ 0.81
-
-
-
-Test R² ≈ 0.76
-
-
-
-Test MAE ≈ 33 g/mi
-
-
-
-Test RMSE ≈ 45 g/mi
-
-
-
-Key takeaway:
-
-
-
-Even with minimal, early-phase design inputs, the model explains ~75% of CO₂ variance on unseen future vehicles.
-
-
-
-This validates:
-
-
-
-Dataset construction
-
-
-
-Feature relevance
-
-
-
-Absence of data leakage
-
-
-
-Suitability for early architecture screening
-
-
-
-Learned Relationships Are Physically Consistent
-
-
-
-The linear model coefficients exhibit clear alignment with vehicle physics and powertrain engineering principles.
-
-
-
-Engine Displacement
-
-
-
-+40 g/mi CO₂ per +1.0 L displacement
-
-
-
-Confirms fuel flow scaling with engine size
-
-
-
-Strong primary driver of CO₂ in certification data
-
-
-
-Vehicle Mass
-
-
-
-~+2.6 g/mi per +100 lbs
-
-
-
-Matches expected road-load and inertial penalties
-
-
-
-Effect magnitude consistent with EPA trends
-
-
-
-Model Year
-
-
-
-−2.6 g/mi per year
-
-
+* AWD: **+9 g/mi**
+* FWD: **−8 g/mi**
+* RWD: ~neutral
 
 Captures:
 
+* Drivetrain losses
+* Mass penalties
+* Layout efficiency differences
 
+---
 
-Powertrain efficiency improvements
+## Key Modeling Conclusion
 
+The model is **not classifying vehicles by category**.
 
+It learns **continuous, interpretable trade-offs** across:
 
-Regulatory tightening
+* Mass
+* Displacement
+* Transmission
+* Drivetrain
 
+This directly addresses a common concern with data-driven screening tools.
 
+---
 
-Technology evolution (downsizing, better transmissions)
+## Engineering Interpretation (CAE Perspective)
 
+The learned relationships resemble a **first-order vehicle energy balance**:
 
+* Displacement → fuel flow scaling
+* Weight → road load & inertia
+* Transmission → operating efficiency
+* Drivetrain → parasitic losses
 
-This validates inclusion of Model Year as a proxy for technology maturity, not leakage.
+In effect:
 
+> **The ML model rediscovered vehicle physics without being explicitly told the equations.**
 
+This makes it a **credible early-phase decision aid**, not a black box.
 
-Architecture-Level Effects Are Quantified
+---
 
-Transmission Effects (relative)
+## What This Model Is Good For
 
+* Early architecture trade studies
+* “What-if” analysis:
 
+  * +200 kg mass
+  * AT → CVT
+  * FWD → AWD
+* Pre-screening concepts before simulation investment
 
-CVT: −31 g/mi (most efficient)
+---
 
+## What It Is *Not* (By Design)
 
+* Cycle-accurate fuel modeling
+* Component-level loss breakdown
+* Calibration-sensitive predictions
 
-AT: +11 g/mi
+These limitations are intentional — and motivate Phase-2.
 
+---
 
+## Phase-2 Roadmap (Path-B)
 
-MT: +21 g/mi
+Next, this work will be extended into a **Physics + ML hybrid framework**:
 
+* Explicit power & energy balance models
+* Cycle-aware physics baseline
+* ML-based residual learning
+* Improved extrapolation & engineering trust
 
+---
 
-These effects align with:
+## Live Demo
 
+A lightweight inference UI has been deployed to demonstrate how the Phase-1 model can be used as an **architecture screening tool**:
 
+👉 **Hugging Face Demo:**
+https://huggingface.co/spaces/DuraiHF/epa-co2-architecture-screening
 
-Engine operating point optimization (CVT)
+---
 
+## Final Note
 
+Even before detailed simulations exist, **architecture decisions already constrain CO₂ outcomes**.
 
-EPA shift schedules
+This project quantifies that constraint — and sets the foundation for physics-guided ML in early vehicle design.
 
+---
 
+### Mentor verdict (straight):
 
-Real certification outcomes (manual ≠ always efficient)
+* This README is now **interview-grade**
+* It matches your LinkedIn post perfectly
+* It clearly separates Phase-1 and Phase-2
+* It reads like an **OEM internal technical note**, not a hobby project
 
+If you want next, I can:
 
+* Review consistency between README ↔ LinkedIn ↔ HF Space
+* Start **Phase-2 physics formulation**
+* Help you turn this into a **portfolio PDF**
 
-Drive System Effects
-
-
-
-AWD: +9 g/mi
-
-
-
-FWD: −8 g/mi
-
-
-
-RWD: ~neutral
-
-
-
-The model clearly captures:
-
-
-
-Additional drivetrain losses
-
-
-
-Mass penalties
-
-
-
-Layout efficiency differences
-
-
-
-Important Modeling Conclusion
-
-
-
-The model is not classifying vehicles by type.
-
-It is learning continuous, interpretable trade-offs across mass, displacement, transmission, and drivetrain choices.
-
-
-
-This directly addresses a common concern with data-driven screening models.
-
-
-
-2️⃣ ENGINEERING-LEVEL INTERPRETATION (CAE-Focused)
-
-
-
-This model behaves like a first-order vehicle energy balance, learned from data:
-
-
-
-Displacement → fuel flow scaling
-
-
-
-Weight → road load \& inertia
-
-
-
-Transmission → operating efficiency
-
-
-
-Drive layout → parasitic losses
-
-
-
-In other words:
-
-
-
-The ML model rediscovered vehicle physics without being explicitly told the equations.
-
-
-
-This makes it a credible early-phase decision tool, not a black box.
-
-
-
-What This Model Is Good For
-
-
-
-Early architecture trade studies
-
-
-
-“What-if” analysis:
-
-
-
-+200 kg mass
-
-
-
-AT → CVT
-
-
-
-FWD → AWD
-
-
-
-Pre-screening concepts before simulation investment
-
-
-
-What It Is NOT (by design)
-
-
-
-Cycle-accurate fuel modeling
-
-
-
-Component-level loss breakdown
-
-
-
-Calibration-sensitive predictions
-
-
-
-These limitations are intentional — and motivate Path-B.
-
-
-
-3️⃣ LINKEDIN STORYTELLING VERSION (High-Impact, Non-Academic)
-
-
-
-You can reuse this almost verbatim 👇
-
-
-
-🚗 Can We Predict Vehicle CO₂ Early — Without CFD or AMESim?
-
-
-
-I built a production-style ML pipeline using EPA certification data (2010–2025) to explore whether early-phase vehicle architecture choices already encode enough signal to estimate CO₂ emissions.
-
-
-
-Instead of focusing on brand or model names, I reduced vehicles to architecture-level features:
-
-
-
-Engine displacement
-
-
-
-Test weight
-
-
-
-Transmission type
-
-
-
-Drive layout
-
-
-
-Model year (technology proxy)
-
-
-
-A simple linear model trained on past years achieved:
-
-
-
-~76% R² on future vehicles
-
-
-
-~33 g/mi MAE — using only early design inputs
-
-
-
-More interestingly, the model learned physically meaningful relationships:
-
-
-
-Larger engines → higher CO₂
-
-
-
-Heavier vehicles → higher CO₂
-
-
-
-CVTs outperform ATs and MTs
-
-
-
-AWD introduces a clear efficiency penalty
-
-
-
-Newer vehicles show systematic CO₂ reductions
-
-
-
-This confirmed something important:
-
-
-
-Even before detailed simulations, architecture decisions already constrain CO₂ outcomes.
-
-
-
+Just tell me what’s next.
