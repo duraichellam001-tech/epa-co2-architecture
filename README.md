@@ -27,7 +27,7 @@ This project explores a key question:
 
 ---
 
-## Scope (Phase-1 / Path-A)
+## Scope (Phase-1)
 
 **Vehicle domain**
 
@@ -68,38 +68,7 @@ This project explores a key question:
 
 The intent is **relative architecture comparison**, not absolute certification prediction.
 
----
-
-## Repository Structure
-
-```
-epa-co2-architecture/
-│
-├── app.py                 # Gradio inference UI (Phase-1 demo)
-├── requirements.txt       # Version-locked dependencies
-├── README.md              # Project documentation
-│
-├── models/                # Frozen trained models
-│   ├── co2_architecture_linear_model.pkl
-│   └── co2_architecture_tree_model.pkl
-│
-├── notebooks/             # Exploration & modeling notebooks
-│   ├── 01_epa_exploration.ipynb
-│   └── 02_pathA_modeling.ipynb
-│
-├── plots/                 # Result visualizations
-│   ├── predicted_vs_actual.png
-│   └── linear_model_coefficients.png
-│
-└── .gitignore
-```
-
-> Raw EPA data and generated artifacts are intentionally excluded from version control.
-> All datasets are reproducible via the processing pipeline.
-
----
-
-## Data Splitting Strategy (Important)
+## Data Splitting Strategy
 
 To reflect **real-world usage**, a **temporal split** was used:
 
@@ -110,7 +79,7 @@ This avoids data leakage and ensures the model is evaluated on **future technolo
 
 ---
 
-## Models (Phase-1)
+## Models
 
 Two models were intentionally used:
 
