@@ -2,7 +2,6 @@
 # Data files (DO NOT COMMIT)
 # =========================
 *.xlsx
-*.parquet
 *.json
 
 # =========================

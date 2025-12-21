@@ -1,0 +1,26 @@
+{
+  "dataset_name": "epa_co2_architecture_pathA",
+  "version": "v1.0",
+  "rows": 9483,
+  "features": [
+    "Model Year",
+    "Test Veh Displacement (L)",
+    "Equivalent Test Weight (lbs.)",
+    "transmission_bucket",
+    "drive_bucket"
+  ],
+  "target": "CO2_combined",
+  "fuel_scope": "Gasoline ICE only",
+  "test_cycles": [
+    "FTP",
+    "HWY"
+  ],
+  "aggregation": "EPA 55/45 FTP/HWY",
+  "years": "2010\u20132025",
+  "notes": [
+    "Vehicle-level aggregation",
+    "Architecture-based features only",
+    "Brand/model names excluded",
+    "Ready for Path-B residual modeling"
+  ]
+}
